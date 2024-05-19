@@ -81,11 +81,28 @@ end
 function ISSafehouseListUI:populateList()
     self.datas:clear();
     local username = self.player:getUsername();
-    for i=0,SafeHouse.getSafehouseList():size()-1 do
+    local ownerSafehouses = {}
+    local memberSafehouses = {}
+    
+    -- Separa le safehouse in due liste: owner e member
+    for i = 0, SafeHouse.getSafehouseList():size() - 1 do
         local safe = SafeHouse.getSafehouseList():get(i);
-        if safe:getPlayers():contains(username) or safe:getOwner() == username then
-            self.datas:addItem(safe:getTitle(), safe);
+        if safe:getOwner() == username then
+            table.insert(ownerSafehouses, safe)
+        elseif safe:getPlayers():contains(username) then
+            table.insert(memberSafehouses, safe)
         end
+    end
+    
+    -- Concatena le due liste con le safehouse del proprietario prima
+    local sortedSafehouses = ownerSafehouses
+    for _, safe in ipairs(memberSafehouses) do
+        table.insert(sortedSafehouses, safe)
+    end
+    
+    -- Aggiunge le safehouse ordinate alla lista
+    for _, safe in ipairs(sortedSafehouses) do
+        self.datas:addItem(safe:getTitle(), safe)
     end
 end
 

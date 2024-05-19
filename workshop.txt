@@ -1,8 +1,6 @@
 version=1
+id=3249591963
 title=Multi Safehouse Button Fix
-description=This is an example mod with two worlds.  You can use this as a template for your own map mods.
-description=
-description=The first world has a single 300x300-tile cell.
-description=The second world adds cells all around the first world.
-tags=
+description=Questa mod serve per poter visualizzare tutte le safehouse di cui siamo membri (e proprietari), così da poterle aprire singolarmente.
+tags=Build 41;Framework;Interface;Multiplayer
 visibility=public
