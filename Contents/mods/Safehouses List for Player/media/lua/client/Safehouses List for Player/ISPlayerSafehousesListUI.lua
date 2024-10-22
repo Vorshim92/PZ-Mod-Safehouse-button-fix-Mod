@@ -1,48 +1,25 @@
--- Salva la funzione originale
-local ISUserPanelUI_onOptionMouseDown_ext = ISUserPanelUI.onOptionMouseDown
-
--- Sovrascrivi la funzione onOptionMouseDown
-function ISUserPanelUI:onOptionMouseDown(button, x, y)
-    -- Verifica se il pulsante premuto è quello per le safehouse
-    if button.internal == "SAFEHOUSEPANEL" then
-        if ISSafehouseListUI.instance then
-            ISSafehouseListUI.instance:close()
-        end
-        local ui = ISSafehouseListUI:new(50, 50, 600, 600, getPlayer());
-        ui:initialise();
-        ui:addToUIManager();
-    else
-        -- Richiama la funzione originale per gestire gli altri pulsanti
-        ISUserPanelUI_onOptionMouseDown_ext(self, button, x, y)
-    end
-end
-
-
-
-
-
 --***********************************************************
 --**              	  VORSHIM                       **
 --***********************************************************
 
-ISSafehouseListUI = ISPanel:derive("ISSafehouseListUI");
-ISSafehouseListUI.messages = {};
+ISPlayerSafehousesListUI = ISPanel:derive("ISPlayerSafehousesListUI");
+ISPlayerSafehousesListUI.messages = {};
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
 
 --************************************************************************--
---** ISSafehouseListUI:initialise
+--** ISPlayerSafehousesListUI:initialise
 --**
 --************************************************************************--
 
-function ISSafehouseListUI:initialise()
+function ISPlayerSafehousesListUI:initialise()
     ISPanel.initialise(self);
     local btnWid = 100
     local btnHgt = math.max(25, FONT_HGT_SMALL + 3 * 2)
     local padBottom = 10
 
-    self.no = ISButton:new(10, self:getHeight() - padBottom - btnHgt, btnWid, btnHgt, getText("IGUI_CraftUI_Close"), self, ISSafehouseListUI.onClick);
+    self.no = ISButton:new(10, self:getHeight() - padBottom - btnHgt, btnWid, btnHgt, getText("IGUI_CraftUI_Close"), self, ISPlayerSafehousesListUI.onClick);
     self.no.internal = "CANCEL";
     self.no.anchorTop = false
     self.no.anchorBottom = true
@@ -64,7 +41,7 @@ function ISSafehouseListUI:initialise()
     self:addChild(self.datas);
 
 
-    self.viewBtn = ISButton:new(self:getWidth() - btnWid - 10,  self:getHeight() - padBottom - btnHgt, btnWid, btnHgt, getText("IGUI_PlayerStats_View"), self, ISSafehouseListUI.onClick);
+    self.viewBtn = ISButton:new(self:getWidth() - btnWid - 10,  self:getHeight() - padBottom - btnHgt, btnWid, btnHgt, getText("IGUI_PlayerStats_View"), self, ISPlayerSafehousesListUI.onClick);
     self.viewBtn.internal = "VIEW";
     self.viewBtn.anchorTop = false
     self.viewBtn.anchorBottom = true
@@ -74,22 +51,36 @@ function ISSafehouseListUI:initialise()
     self:addChild(self.viewBtn);
     self.viewBtn.enable = false;
 
+    self.searchField = ISTextEntryBox:new("", self.width/2 - 100/2, 40, 100, 10);
+        self.searchField:initialise()
+        self.searchField.tooltip = getText("ContextMenu_searchTip")
+        self.searchField.onTextChange = function()
+            local searchFilter = self.searchField:getInternalText()
+            self:populateList(searchFilter)
+        end
+    self.searchField.backgroundColor = { r = 0, g = 0, b = 0, a = 1 }
+    self:addChild(self.searchField)
+    self.searchField:setVisible(true)
+
     self:populateList();
 
 end
 
-function ISSafehouseListUI:populateList()
+function ISPlayerSafehousesListUI:populateList(searchFilter)
     self.datas:clear();
     local username = self.player:getUsername();
     local ownerSafehouses = {}
     local memberSafehouses = {}
+
+    local matchingSafehouses = {}
+    local nonMatchingSafehouses = {}
     
     -- Separa le safehouse in due liste: owner e member
     for i = 0, SafeHouse.getSafehouseList():size() - 1 do
         local safe = SafeHouse.getSafehouseList():get(i);
         if safe:getOwner() == username then
             table.insert(ownerSafehouses, safe)
-        elseif safe:getPlayers():contains(username) then
+        elseif safe:getPlayers():contains(username) then --cambiare con playerallowed?
             table.insert(memberSafehouses, safe)
         end
     end
@@ -99,6 +90,24 @@ function ISSafehouseListUI:populateList()
     for _, safe in ipairs(memberSafehouses) do
         table.insert(sortedSafehouses, safe)
     end
+
+    -- Filtra le safehouse in base al filtro di ricerca
+    if searchFilter then
+        -- Converti il filtro di ricerca in minuscolo per una comparazione case-insensitive
+        local searchFilterLower = string.lower(searchFilter or "")
+        for _, safe in ipairs(sortedSafehouses) do
+            if string.find(string.lower(safe:getOwner()), searchFilterLower) then
+                table.insert(matchingSafehouses, safe)
+            else
+                table.insert(nonMatchingSafehouses, safe)
+            end
+        end
+        sortedSafehouses = matchingSafehouses
+        for _, safe in ipairs(nonMatchingSafehouses) do
+            table.insert(sortedSafehouses, safe)
+        end
+    end
+
     
     -- Aggiunge le safehouse ordinate alla lista
     for _, safe in ipairs(sortedSafehouses) do
@@ -106,7 +115,7 @@ function ISSafehouseListUI:populateList()
     end
 end
 
-function ISSafehouseListUI:drawDatas(y, item, alt)
+function ISPlayerSafehousesListUI:drawDatas(y, item, alt)
     local a = 0.9;
 
 --    self.parent.selectedSafehouse = nil;
@@ -123,17 +132,26 @@ function ISSafehouseListUI:drawDatas(y, item, alt)
     return y + self.itemheight;
 end
 
-function ISSafehouseListUI:prerender()
+function ISPlayerSafehousesListUI:prerender()
     local z = 20;
-    local splitPoint = 100;
-    local x = 10;
     self:drawRect(0, 0, self.width, self.height, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b);
     self:drawRectBorder(0, 0, self.width, self.height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
     self:drawText(getText("IGUI_AdminPanel_SeeSafehouses"), self.width/2 - (getTextManager():MeasureStringX(UIFont.Medium, getText("IGUI_AdminPanel_SeeSafehouses")) / 2), z, 1,1,1,1, UIFont.Medium);
     z = z + 30;
 end
 
-function ISSafehouseListUI:onClick(button)
+function ISPlayerSafehousesListUI:render()
+
+    if self.searchField:isVisible() then
+        local x
+        local y
+        x = 85
+        y = 3
+        self.searchField:drawTexture(getTexture("media/ui/searchicon.png"), x, y, 1, 1, 1, 1)
+    end
+end
+
+function ISPlayerSafehousesListUI:onClick(button)
     if button.internal == "CANCEL" then
         self:close()
     end
@@ -144,17 +162,17 @@ function ISSafehouseListUI:onClick(button)
     end
 end
 
-function ISSafehouseListUI:close()
+function ISPlayerSafehousesListUI:close()
     self:setVisible(false)
     self:removeFromUIManager()
-    ISSafehouseListUI.instance = nil
+    ISPlayerSafehousesListUI.instance = nil
 end
 
 --************************************************************************--
---** ISSafehouseListUI:new
+--** ISPlayerSafehousesListUI:new
 --**
 --************************************************************************--
-function ISSafehouseListUI:new(x, y, width, height, player)
+function ISPlayerSafehousesListUI:new(x, y, width, height, player)
     local o = {}
     x = getCore():getScreenWidth() / 2 - (width / 2);
     y = getCore():getScreenHeight() / 2 - (height / 2);
@@ -169,15 +187,15 @@ function ISSafehouseListUI:new(x, y, width, height, player)
     o.player = player;
     o.selectedFaction = nil;
     o.moveWithMouse = true;
-    ISSafehouseListUI.instance = o;
+    ISPlayerSafehousesListUI.instance = o;
     return o;
 end
 
-function ISSafehouseListUI.OnSafehousesChanged()
-    if ISSafehouseListUI.instance then
-        ISSafehouseListUI.instance:populateList()
+function ISPlayerSafehousesListUI.OnSafehousesChanged()
+    if ISPlayerSafehousesListUI.instance then
+        ISPlayerSafehousesListUI.instance:populateList()
     end
 end
 
-Events.OnSafehousesChanged.Add(ISSafehouseListUI.OnSafehousesChanged)
+Events.OnSafehousesChanged.Add(ISPlayerSafehousesListUI.OnSafehousesChanged)
 

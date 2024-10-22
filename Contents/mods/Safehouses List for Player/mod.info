@@ -1,8 +1,6 @@
-version=1
-id=3249591963
-title=Multi Safehouse Panel List for Player
+name=Safehouses List for Player
 author=Vorshim
+id=safehousefixbutton
 description=This mod modifies the behavior of the button that displays the player/client's Safehouse. It was created to meet the need of showing multiple owned safehouses thanks to the Safehouse Whitelist mod. It is, of course, not mandatory to install Safehouse Whitelist, as the mod will also work in vanilla. It will simply display the single safehouse you can have.
 I made sure that the safehouse you own is always displayed at the top.
-tags=Build 41;Framework;Interface;Multiplayer
-visibility=public
+poster=poster.png
