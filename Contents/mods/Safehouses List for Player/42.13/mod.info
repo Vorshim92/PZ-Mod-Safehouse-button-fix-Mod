@@ -1,6 +1,7 @@
-name=Safehouses List for Player B41
-author=Vorshim
+name=Safehouses List for Player B42MP
 id=safehousefixbutton
-description=This mod modifies the behavior of the button that displays the player/client's Safehouse. It was created to meet the need of showing multiple owned safehouses thanks to the Safehouse Whitelist mod. It is, of course, not mandatory to install Safehouse Whitelist, as the mod will also work in vanilla. It will simply display the single safehouse you can have.
-I made sure that the safehouse you own is always displayed at the top.
 poster=poster.png
+icon=icon.png
+description=This mod modifies the behavior of the button that displays the player/client's Safehouse. It was created to meet the need of showing multiple owned safehouses thanks to the Safehouse Whitelist mod. It is, of course, not mandatory to install Safehouse Whitelist, as the mod will also work in vanilla. It will simply display the single safehouse you can have.
+authors=Vorshim
+versionMin=42.13
