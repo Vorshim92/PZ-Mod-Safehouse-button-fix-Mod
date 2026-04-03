@@ -45,3 +45,6 @@ ISSafehouseUI.ReceiveSafehouseInvite = function(safehouse, host)
         ISSafehouseUI.inviteDialogs[host] = modal
     end
 end
+
+Events.ReceiveSafehouseInvite.Remove(original_ISSafehouseUI_ReceiveSafehouseInvite)
+Events.ReceiveSafehouseInvite.Add(ISSafehouseUI.ReceiveSafehouseInvite)
